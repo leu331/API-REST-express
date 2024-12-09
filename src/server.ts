@@ -1,6 +1,7 @@
-import express, {Request, Response, NextFunction} from "express" //importei req, res e next para usar no tratamento de erros
+import express, {Request, Response, NextFunction} from "express" 
 import { routes } from "./routes" 
-import { AppError } from "./utils/AppError" //importo para usar abaixo
+import { AppError } from "./utils/AppError"
+import { ZodError } from "zod" 
 
 const PORT = 3333 
 
@@ -13,8 +14,12 @@ app.use(routes)
 
 app.use((error:any, request: Request, response: Response, _: NextFunction) => { 
     if (error instanceof AppError) {      
-        return response.status(error.statusCode).json({message: error.message})    }
-    response.status(500).json({message: "Erro no servidor"}) 
+        return response.status(error.statusCode).json({message: error.message})}
+
+    if (error instanceof ZodError) {
+        return response.status(400).json({message: "Validation error!", issue: error.format()}) }
+
+    response.status(500).json({message: "Server error"}) 
 })
 
 app.listen(PORT, () => console.log(`Server is running on port ${PORT}!`))
